@@ -1,37 +1,59 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
 import './App.css'
+import Chatbot from './chatbot.jsx'
+import Login from './components/auth/Login.jsx'
+import { auth } from './firebaseConfig'
+import { onAuthStateChanged } from 'firebase/auth'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+      setLoading(false)
+    })
+    
+    // Cleanup subscription
+    return () => unsubscribe()
+  }, [])
+
+  if (loading) {
+    return <div className="loading">Loading...</div>
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <div className="App">
-        <Chatbot />
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app-container">
+      <header className="app-header">
+        <h1>SafarSaathi Travel Assistant</h1>
+        {user && (
+          <div className="user-info">
+            <img src={user.photoURL} alt={user.displayName} className="avatar" />
+            <span>Welcome, {user.displayName}</span>
+            <button onClick={() => auth.signOut()} className="logout-btn">
+              Logout
+            </button>
+          </div>
+        )}
+      </header>
+
+      <main className="app-content">
+        {user ? (
+          <Chatbot user={user} />
+        ) : (
+          <div className="login-container">
+            <h2>Welcome to SafarSaathi</h2>
+            <p>Your AI-powered travel companion</p>
+            <Login setUser={setUser} />
+          </div>
+        )}
+      </main>
+
+      <footer className="app-footer">
+        <p>© 2025 SafarSaathi Travel Assistant</p>
+      </footer>
+    </div>
   )
 }
 

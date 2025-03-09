@@ -45,6 +45,8 @@ const TravelChatbot = () => {
           border: "1px solid #ccc",
           padding: "10px",
           marginBottom: "10px",
+          backgroundColor: "#4D5D53"
+        
         }}
       >
         {messages.map((msg, index) => (

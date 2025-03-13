@@ -206,3 +206,39 @@ def get_flight_details(from_location, to_location, depart_date, return_date, num
         return f"Error fetching flights: {str(e)}"
 
 
+# @app.get("/")
+# def home():
+#     """Home endpoint to confirm API is running."""
+#     return {"message": "Welcome to the Travel Assistant Chatbot API!"}
+
+# @app.post("/verify-token")
+# async def verify_firebase_token_endpoint(data: TokenData):
+#     """API to verify Firebase Authentication token."""
+#     decoded_token = verify_token(data.token)
+    
+#     if decoded_token:
+#         return {"uid": decoded_token["uid"], "email": decoded_token.get("email")}
+    
+#     raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+# @app.get("/protected-route")
+# def protected_route(authorization: str = Header(None)):
+#     """A protected route that requires a Firebase ID token."""
+#     if not authorization:
+#         raise HTTPException(status_code=401, detail="No token provided")
+    
+#     try:
+#         token = authorization.split(" ")[1]  # Extract token from "Bearer <token>"
+#         user_data = verify_token(token)
+        
+#         if not user_data:
+#             raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+#         return {"message": "Welcome!", "user": user_data}
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
+
+
+
+
+

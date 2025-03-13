@@ -1,3 +1,451 @@
+# from fastapi import FastAPI, HTTPException, Header
+# from fastapi.middleware.cors import CORSMiddleware
+# import google.generativeai as genai
+# from firebase_config import verify_token
+# from pydantic import BaseModel
+# import random
+# import os
+
+# app = FastAPI()
+
+# # Allow frontend requests
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # Allow frontend origins
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # Configure Gemini API
+# api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
+# if not api_key:
+#     raise ValueError("GOOGLE_GEMINI_API_KEY is not set in environment variables.")
+
+# genai.configure(api_key=api_key)
+# model = genai.GenerativeModel("gemini-1.5-flash")
+
+# # Store user session data
+# user_sessions = {}
+
+# class ChatRequest(BaseModel):
+#     user_id: str
+#     message: str
+
+# class TokenData(BaseModel):
+#     token: str
+
+# # Predefined structured question flow
+# QUESTION_FLOW = {
+#     "start": [
+#         "Hello! How can I assist you today?",
+#         "Choose an option by entering a number:",
+#         "1️⃣ Travel itinerary",
+#         "2️⃣ Find a hotel",
+#         "3️⃣ Get directions",
+#         "4️⃣ Things to do"
+#     ],
+#     "itinerary": [
+#         "Where are you traveling to?",
+#         "How long is your trip?",
+#         "What type of activities do you prefer?",
+#         "What is your travel start date? (YYYY-MM-DD)"
+#     ],
+#     "hotel": [
+#         "Which city?",
+#         "What is your budget?",
+#         "Hotel, hostel, or apartment?"
+#     ],
+#     "directions": [
+#         "Starting location?",
+#         "Destination?",
+#         "Preferred transport: train, bus, flight?"
+#     ],
+#     "attractions": [
+#         "Which city?",
+#         "What type of activity: food, museums, parks, shopping?",
+#         "Solo, family, or group trip?"
+#     ]
+# }
+
+# QUESTION_MAPPING = {
+#     "1": "itinerary",
+#     "2": "hotel",
+#     "3": "directions",
+#     "4": "attractions"
+# }
+
+# GREETING_RESPONSES = [
+#     "Hello! How can I assist you today?",
+#     "Hi there! How can I help with your travel plans?",
+#     "Hey! What can I do for you today?"
+# ]
+
+# @app.post("/chat")
+# def chat(request: ChatRequest):
+#     """Handles user messages and guides structured question flow."""
+#     user_id = request.user_id
+#     user_input = request.message.lower().strip()
+
+#     print(f"User {user_id} sent: {request.message}")
+
+#     # Handle greetings
+#     if user_input in ["hi", "hello", "hey"]:
+#         return {"reply": random.choice(GREETING_RESPONSES) + "\n\n" + "\n".join(QUESTION_FLOW["start"][1:])}
+
+#     # Handle numeric selections (1-4)
+#     if user_input in QUESTION_MAPPING:
+#         user_choice = QUESTION_MAPPING[user_input]
+#         user_sessions[user_id] = {"step": user_choice, "responses": []}
+#         user_sessions[user_id]["index"] = 0  # Start at first question
+#         return {"reply": QUESTION_FLOW[user_choice][0]}
+
+#     # Check if user is in an active session
+#     session = user_sessions.get(user_id)
+#     if session:
+#         step = session["step"]
+#         responses = session["responses"]
+#         index = session["index"]
+
+#         # Store user response
+#         responses.append(request.message)
+
+#         # Move to next question
+#         if index < len(QUESTION_FLOW[step]) - 1:
+#             user_sessions[user_id]["index"] += 1
+#             return {"reply": QUESTION_FLOW[step][index + 1]}
+#         else:
+#             # Generate AI response using all gathered inputs
+#             structured_prompt = (
+#                 f"User is planning a {step}.\n"
+#                 f"Here are their responses in order:\n"
+#                 f"{responses}\n"
+#                 f"Provide a detailed, relevant travel response based on this."
+#             )
+#             try:
+#                 ai_response = model.generate_content(structured_prompt)
+                
+#                 # Reset session after AI response
+#                 del user_sessions[user_id]
+
+#                 return {"reply": ai_response.text}
+#             except Exception as e:
+#                 raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
+
+#     # If input is unknown, show available options again
+#     return {"reply": "\n".join(QUESTION_FLOW["start"])}
+
+# @app.get("/")
+# def home():
+#     """Home endpoint to confirm API is running."""
+#     return {"message": "Welcome to the Travel Assistant Chatbot API!"}
+
+# @app.post("/verify-token")
+# async def verify_firebase_token_endpoint(data: TokenData):
+#     """API to verify Firebase Authentication token."""
+#     decoded_token = verify_token(data.token)
+    
+#     if decoded_token:
+#         return {"uid": decoded_token["uid"], "email": decoded_token.get("email")}
+    
+#     raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+# @app.get("/protected-route")
+# def protected_route(authorization: str = Header(None)):
+#     """A protected route that requires a Firebase ID token."""
+#     if not authorization:
+#         raise HTTPException(status_code=401, detail="No token provided")
+    
+#     try:
+#         token = authorization.split(" ")[1]  # Extract token from "Bearer <token>"
+#         user_data = verify_token(token)
+        
+#         if not user_data:
+#             raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+#         return {"message": "Welcome!", "user": user_data}
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
+
+
+
+
+
+
+
+
+
+# from fastapi import FastAPI, HTTPException, Header
+# from fastapi.middleware.cors import CORSMiddleware
+# import google.generativeai as genai
+# import requests
+# import os
+# import random
+# from firebase_config import verify_token
+# from pydantic import BaseModel
+
+# app = FastAPI()
+
+# # Allow frontend requests
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # Configure Gemini API
+# api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
+# if not api_key:
+#     raise ValueError("GOOGLE_GEMINI_API_KEY is not set in environment variables.")
+
+# genai.configure(api_key=api_key)
+# model = genai.GenerativeModel("gemini-1.5-flash")
+
+# # Booking.com API configuration
+# BOOKING_COM_API_KEY = os.getenv("BOOKING_COM_API_KEY")
+# BOOKING_COM_API_URL = "https://booking-com15.p.rapidapi.com/api/v1/flights/searchFlights"
+
+# # Store user session data
+# user_sessions = {}
+
+# class ChatRequest(BaseModel):
+#     user_id: str
+#     message: str
+
+# class TokenData(BaseModel):
+#     token: str
+
+# # Predefined structured question flow
+# QUESTION_FLOW = {
+#     "start": [
+#         "Hello! How can I assist you today?",
+#         "Choose an option by entering a number:",
+#         "1️⃣ Travel itinerary",
+#         "2️⃣ Find a hotel",
+#         "3️⃣ Get directions",
+#         "4️⃣ Things to do",
+#         "5️⃣ Book a Flight"
+#     ],
+#     "itinerary": [
+#         "Where are you traveling to?",
+#         "How long is your trip?",
+#         "What type of activities do you prefer?",
+#         "What is your travel start date? (YYYY-MM-DD)"
+#     ],
+#     "hotel": [
+#         "Which city?",
+#         "What is your budget?",
+#         "Hotel, hostel, or apartment?"
+#     ],
+#     "directions": [
+#         "Starting location?",
+#         "Destination?",
+#         "Preferred transport: train, bus, flight?"
+#     ],
+#     "attractions": [
+#         "Which city?",
+#         "What type of activity: food, museums, parks, shopping?",
+#         "Solo, family, or group trip?"
+#     ],
+#     "flights": [
+#         "From which airport are you departing?",
+#         "To which airport are you traveling?",
+#         "What is your departure date? (YYYY-MM-DD)",
+#         "What is your return date? (YYYY-MM-DD)",
+#         "How many people are traveling?"
+#     ]
+# }
+
+# QUESTION_MAPPING = {
+#     "1": "itinerary",
+#     "2": "hotel",
+#     "3": "directions",
+#     "4": "attractions",
+#     "5": "flights"
+# }
+
+# GREETING_RESPONSES = [
+#     "Hello! How can I assist you today?",
+#     "Hi there! How can I help with your travel plans?",
+#     "Hey! What can I do for you today?"
+# ]
+
+# def get_flight_details(from_location, to_location, depart_date, return_date, num_people):
+#     """Calls the Booking.com API to fetch flight details."""
+#     headers = {
+#         "x-rapidapi-key": BOOKING_COM_API_KEY,
+#         "x-rapidapi-host": "booking-com15.p.rapidapi.com"
+#     }
+#     params = {
+#         "fromId": from_location,
+#         "toId": to_location,
+#         "departDate": depart_date,
+#         "returnDate": return_date,
+#         "adults": num_people,
+#         "sort": "BEST",
+#         "cabinClass": "ECONOMY",
+#         "currency_code": "INR"
+#     }
+
+#     try:
+#         response = requests.get(BOOKING_COM_API_URL, headers=headers, params=params)
+#         data = response.json()
+        
+#         if "data" not in data or "aggregation" not in data["data"]:
+#             return "No flights found. Please check your details."
+
+#         airlines = data["data"]["aggregation"]["airlines"]
+#         flight_info = []
+
+#         for airline in airlines[:5]:  # Get top 5 results
+#             flight_info.append(
+#                 f"✈️ **{airline['name']}** ({airline['iataCode']})\n"
+#                 f"💰 Price: {airline['minPrice']['units']}\n"
+#             )
+
+#         return "**Top 5 Flight Options:**\n\n" + "\n".join(flight_info)
+#     except Exception as e:
+#         return f"Error fetching flights: {str(e)}"
+
+# @app.post("/chat")
+# def chat(request: ChatRequest):
+#     """Handles user messages and guides structured question flow."""
+#     user_id = request.user_id
+#     user_input = request.message.lower().strip()
+
+#     print(f"User {user_id} sent: {request.message}")
+
+#     # Handle greetings
+#     if user_input in ["hi", "hello", "hey"]:
+#         return {"reply": random.choice(GREETING_RESPONSES) + "\n\n" + "\n".join(QUESTION_FLOW["start"][1:])}
+
+#     # Handle numeric selections (1-5)
+#     if user_input in QUESTION_MAPPING:
+#         user_choice = QUESTION_MAPPING[user_input]
+#         user_sessions[user_id] = {"step": user_choice, "responses": []}
+#         user_sessions[user_id]["index"] = 0  # Start at first question
+#         return {"reply": QUESTION_FLOW[user_choice][0]}
+
+#     # Check if user is in an active session
+#     session = user_sessions.get(user_id)
+#     if session:
+#         step = session["step"]
+#         responses = session["responses"]
+#         index = session["index"]
+
+#         # Store user response
+#         responses.append(request.message)
+
+#         # Move to next question
+#         if index < len(QUESTION_FLOW[step]) - 1:
+#             user_sessions[user_id]["index"] += 1
+#             print(f"Step: {step}, Index: {index}, Responses count: {len(responses)}")
+#             print(f"Questions in this flow: {len(QUESTION_FLOW[step])}")
+#             return {"reply": QUESTION_FLOW[step][index + 1]}
+#         else:
+#             if step == "flights":
+#                 print(responses)
+#                 from_location = responses[0]
+#                 to_location = responses[1]
+#                 depart_date = responses[2]
+#                 return_date = responses[3]
+#                 num_people = responses[4]
+                
+#                 # Ensure num_people is a number
+#                 try:
+#                     num_people = int(num_people)
+#                 except ValueError:
+#                     num_people = 1  # Default to 1 if parsing fails
+                
+#                 flight_result = get_flight_details(
+#                     from_location, 
+#                     to_location, 
+#                     depart_date, 
+#                     return_date, 
+#                     num_people
+#                 )
+#                 print(flight_result)
+#                 del user_sessions[user_id]  # Reset session
+#                 return {"reply": flight_result}
+#             else:
+#                 # Generate AI response for other categories
+#                 structured_prompt = (
+#                     f"User is planning a {step}.\n"
+#                     f"Here are their responses in order:\n"
+#                     f"{responses}\n"
+#                     f"Provide a detailed, relevant travel response based on this."
+#                 )
+#                 try:
+#                     ai_response = model.generate_content(structured_prompt)
+#                     del user_sessions[user_id]  # Reset session
+#                     return {"reply": ai_response.text}
+#                 except Exception as e:
+#                     raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
+
+#     # If input is unknown, show available options again
+#     return {"reply": "\n".join(QUESTION_FLOW["start"])}
+
+# @app.get("/")
+# def home():
+#     """Home endpoint to confirm API is running."""
+#     return {"message": "Welcome to the Travel Assistant Chatbot API!"}
+
+# @app.post("/verify-token")
+# async def verify_firebase_token_endpoint(data: TokenData):
+#     """API to verify Firebase Authentication token."""
+#     decoded_token = verify_token(data.token)
+    
+#     if decoded_token:
+#         return {"uid": decoded_token["uid"], "email": decoded_token.get("email")}
+    
+#     raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+# @app.get("/protected-route")
+# def protected_route(authorization: str = Header(None)):
+#     """A protected route that requires a Firebase ID token."""
+#     if not authorization:
+#         raise HTTPException(status_code=401, detail="No token provided")
+    
+#     try:
+#         token = authorization.split(" ")[1]  # Extract token from "Bearer <token>"
+#         user_data = verify_token(token)
+        
+#         if not user_data:
+#             raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+#         return {"message": "Welcome!", "user": user_data}
+#     except Exception as e:
+#         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
@@ -5,6 +453,7 @@ from firebase_config import verify_token
 from pydantic import BaseModel
 import random
 import os
+import requests
 
 app = FastAPI()
 
@@ -35,7 +484,7 @@ class ChatRequest(BaseModel):
 class TokenData(BaseModel):
     token: str
 
-# Predefined structured question flow
+# Predefined structured question flow (Including flight booking)
 QUESTION_FLOW = {
     "start": [
         "Hello! How can I assist you today?",
@@ -48,7 +497,11 @@ QUESTION_FLOW = {
     "itinerary": [
         "Where are you traveling to?",
         "How long is your trip?",
-        "What type of activities do you prefer?"
+        "What type of activities do you prefer?",
+        "Which city are you flying from?",
+        "What is your departure date? (YYYY-MM-DD)",
+        "What is your return date? (YYYY-MM-DD)",
+        "How many people are traveling?"
     ],
     "hotel": [
         "Which city?",
@@ -80,6 +533,9 @@ GREETING_RESPONSES = [
     "Hey! What can I do for you today?"
 ]
 
+BOOKING_COM_API_KEY = os.getenv("BOOKING_COM_API_KEY")
+BOOKING_COM_API_URL = "https://booking-com15.p.rapidapi.com/api/v1/flights/searchFlights"
+
 @app.post("/chat")
 def chat(request: ChatRequest):
     """Handles user messages and guides structured question flow."""
@@ -95,8 +551,8 @@ def chat(request: ChatRequest):
     # Handle numeric selections (1-4)
     if user_input in QUESTION_MAPPING:
         user_choice = QUESTION_MAPPING[user_input]
-        user_sessions[user_id] = {"step": user_choice, "responses": []}
-        user_sessions[user_id]["index"] = 0  # Start at first question
+        user_sessions[user_id] = {"step": user_choice, "responses": [], "index": 0}
+        user_sessions[user_id]["index"] = 0 
         return {"reply": QUESTION_FLOW[user_choice][0]}
 
     # Check if user is in an active session
@@ -109,59 +565,92 @@ def chat(request: ChatRequest):
         # Store user response
         responses.append(request.message)
 
-        # Move to next question
+        # Move to the next question
         if index < len(QUESTION_FLOW[step]) - 1:
             user_sessions[user_id]["index"] += 1
             return {"reply": QUESTION_FLOW[step][index + 1]}
-        else:
-            # Generate AI response using all gathered inputs
-            structured_prompt = (
-                f"User is planning a {step}.\n"
-                f"Here are their responses in order:\n"
-                f"{responses}\n"
-                f"Provide a detailed, relevant travel response based on this."
-            )
-            try:
-                ai_response = model.generate_content(structured_prompt)
-                
-                # Reset session after AI response
-                del user_sessions[user_id]
 
-                return {"reply": ai_response.text}
+        # **Itinerary Handling (Includes Flights)**
+        elif step == "itinerary":
+            (
+                travel_destination,
+                trip_length,
+                activity_type,
+                from_location,
+                depart_date,
+                return_date,
+                num_people
+            ) = responses
+
+            structured_prompt = (
+                f"Create a {trip_length}-day itinerary for {travel_destination}. "
+                f"The user prefers {activity_type} activities."
+            )
+
+            try:
+                ai_response = model.generate_content(structured_prompt).text
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"AI generation error: {str(e)}")
 
+            # Fetch flight details
+            flight_response = get_flight_details(from_location, travel_destination, depart_date, return_date, int(num_people))
+
+           
+            del user_sessions[user_id]
+            # return {"reply": f"{ai_response}\n"}
+            return {"reply": f"{ai_response}\n\n{flight_response}"}
+        
+        structured_prompt = (
+            f"User is planning a {step}.\n"
+            f"Here are their responses in order:\n"
+            f"{responses}\n"
+            f"Provide a detailed, relevant travel response based on this."
+        )
+        try:
+            ai_response = model.generate_content(structured_prompt)
+    
+            del user_sessions[user_id]  # 🔥 Reset session after AI response
+            return {"reply": ai_response.text}
+        except Exception as e:
+            return {"reply": f"AI generation error: {str(e)}"}
     # If input is unknown, show available options again
     return {"reply": "\n".join(QUESTION_FLOW["start"])}
 
-@app.get("/")
-def home():
-    """Home endpoint to confirm API is running."""
-    return {"message": "Welcome to the Travel Assistant Chatbot API!"}
+def get_flight_details(from_location, to_location, depart_date, return_date, num_people):
+    """Calls the Booking.com API to fetch flight details."""
+    headers = {
+        "x-rapidapi-key": BOOKING_COM_API_KEY,
+        "x-rapidapi-host": "booking-com15.p.rapidapi.com"
+    }
+    params = {
+        "fromId": from_location,
+        "toId": to_location,
+        "departDate": depart_date,
+        "returnDate": return_date,
+        "adults": num_people,
+        "sort": "BEST",
+        "cabinClass": "ECONOMY",
+        "currency_code": "INR"
+    }
 
-@app.post("/verify-token")
-async def verify_firebase_token_endpoint(data: TokenData):
-    """API to verify Firebase Authentication token."""
-    decoded_token = verify_token(data.token)
-    
-    if decoded_token:
-        return {"uid": decoded_token["uid"], "email": decoded_token.get("email")}
-    
-    raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-@app.get("/protected-route")
-def protected_route(authorization: str = Header(None)):
-    """A protected route that requires a Firebase ID token."""
-    if not authorization:
-        raise HTTPException(status_code=401, detail="No token provided")
-    
     try:
-        token = authorization.split(" ")[1]  # Extract token from "Bearer <token>"
-        user_data = verify_token(token)
+        response = requests.get(BOOKING_COM_API_URL, headers=headers, params=params)
+        data = response.json()
         
-        if not user_data:
-            raise HTTPException(status_code=401, detail="Invalid or expired token")
-        
-        return {"message": "Welcome!", "user": user_data}
+        if "data" not in data or "aggregation" not in data["data"]:
+            return "No flights found. Please check your details."
+
+        airlines = data["data"]["aggregation"]["airlines"]
+        flight_info = []
+
+        for airline in airlines[:5]:  # Get top 5 results
+            flight_info.append(
+                f"✈️ **{airline['name']}** ({airline['iataCode']})\n"
+                f"💰 Price: {airline['minPrice']['units']}\n"
+            )
+
+        return "**Top 5 Flight Options:**\n\n" + "\n".join(flight_info)
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
+        return f"Error fetching flights: {str(e)}"
+
+

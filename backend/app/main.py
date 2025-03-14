@@ -150,7 +150,7 @@ def chat(request: ChatRequest):
            
             del user_sessions[user_id]
             # return {"reply": f"{ai_response}\n"}
-            return {"reply": f"{ai_response}\n\n{flight_response}"}
+            return {"reply": ai_response, "flights": flight_response}
         
         structured_prompt = (
             f"User is planning a {step}.\n"
@@ -190,20 +190,25 @@ def get_flight_details(from_location, to_location, depart_date, return_date, num
         data = response.json()
         
         if "data" not in data or "aggregation" not in data["data"]:
-            return "No flights found. Please check your details."
+            return {"error": "No flights found. Please check your details."}
 
         airlines = data["data"]["aggregation"]["airlines"]
-        flight_info = []
+        flight_cards = []
 
         for airline in airlines[:5]:  # Get top 5 results
-            flight_info.append(
-                f"✈️ **{airline['name']}** ({airline['iataCode']})\n"
-                f"💰 Price: {airline['minPrice']['units']}\n"
-            )
+            flight_cards.append({
+                "airline": airline["name"],
+                "iata_code": airline["iataCode"],
+                "logo": airline["logoUrl"],
+                "price": airline["minPrice"]["units"],
+                
+            })
 
-        return "**Top 5 Flight Options:**\n\n" + "\n".join(flight_info)
+        return {"flights": flight_cards}
+
     except Exception as e:
-        return f"Error fetching flights: {str(e)}"
+        return {"error": f"Error fetching flights: {str(e)}"}
+
 
 
 # @app.get("/")

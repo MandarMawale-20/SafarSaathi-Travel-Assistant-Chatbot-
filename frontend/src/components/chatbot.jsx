@@ -48,60 +48,142 @@ const TravelChatbot = () => {
     }
   };
 
-  return (
-    <div style={{ width: "400px", margin: "auto", textAlign: "center" }}>
-      <h2>Travel Assistant</h2>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  return (
+    <div style={{ 
+      width: "500px", 
+      margin: "auto", 
+      textAlign: "center",
+      fontFamily: "Arial, sans-serif",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      borderRadius: "12px",
+      overflow: "hidden"
+    }}>
+     
+      {/* Chat Header */}
+      <div style={{
+        padding: "12px",
+        backgroundColor: "#34495e",
+        color: "#fff",
+        fontSize: "18px",
+        fontWeight: "bold"
+      }}>
+        Travel Assistant
+      </div>
+     
       {/* Chat Messages */}
       <div
         style={{
           height: "400px",
           overflowY: "auto",
-          border: "1px solid #ccc",
-          padding: "10px",
+          border: "1px solid #ddd",
+          padding: "15px",
           marginBottom: "10px",
           backgroundColor: "#4D5D53",
           color: "#fff",
+          textAlign: "left"
         }}
       >
         {messages.map((msg, index) => (
-          <div key={index} style={{ textAlign: msg.user ? "right" : "left" }}>
+          <div key={index} style={{ 
+            marginBottom: "12px",
+            textAlign: msg.user ? "right" : "left" 
+          }}>
             {msg.user && (
-              <p>
+              <div style={{
+                backgroundColor: "#3498db",
+                color: "#fff",
+                borderRadius: "18px 18px 0 18px",
+                padding: "10px 15px",
+                display: "inline-block",
+                maxWidth: "80%"
+              }}>
                 <strong>You:</strong> {msg.user}
-              </p>
+              </div>
             )}
             {msg.bot && (
-              <p>
+              <div style={{
+                backgroundColor: "#2c3e50",
+                color: "#fff",
+                borderRadius: "18px 18px 18px 0",
+                padding: "10px 15px",
+                display: "inline-block",
+                maxWidth: "80%"
+              }}>
                 <strong>Bot:</strong> {msg.bot}
-              </p>
+              </div>
             )}
             {msg.flights && (
-              <div>
-                <h3>✈️ Available Flights</h3>
+              <div style={{
+                width: "100%",
+                backgroundColor: "#2c3e50",
+                borderRadius: "8px",
+                padding: "10px",
+                marginBottom: "10px",
+              }}>
+                <h3 style={{
+                  margin: "0 0 10px 0",
+                  fontSize: "16px",
+                  borderBottom: "1px solid #7CB9E8",
+                  paddingBottom: "5px"
+                }}>✈️ Available Flights</h3>
                 {msg.flights.map((flight, idx) => (
                   <div
                     key={idx}
                     style={{
-                      border: "1px solid #ddd",
+                      border: "1px solid #7CB9E8",
                       borderRadius: "8px",
-                      padding: "10px",
+                      padding: "12px",
                       marginBottom: "10px",
                       backgroundColor: "#7CB9E8",
                       display: "flex",
                       alignItems: "center",
+                      transition: "transform 0.2s",
+                      cursor: "pointer"
                     }}
+                    onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                    onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
                   >
                     <img
                       src={flight.logo}
                       alt={flight.airline}
-                      style={{ width: "40px", height: "40px", marginRight: "10px" }}
+                      style={{ 
+                        width: "40px", 
+                        height: "40px", 
+                        marginRight: "15px",
+                        borderRadius: "50%",
+                        backgroundColor: "#fff",
+                        padding: "5px"
+                      }}
                     />
-                    <div>
-                      <strong>
-                        Airline Name ✈️ :{flight.airline} ({flight.iata_code})
+                    <div style={{ textAlign: "left" }}>
+                      <strong style={{ fontSize: "15px" }}>
+                        {flight.airline} ({flight.iata_code}) ✈️
                       </strong>
-                      <p>Price💰: ₹{flight.price} </p>
+                      <p style={{ 
+                        margin: "5px 0 0 0",
+                        color: "#ffffff",
+                        fontWeight: "bold"  
+                      }}>Price💰: ₹{flight.price} </p>
                     </div>
                   </div>
                 ))}
@@ -112,32 +194,89 @@ const TravelChatbot = () => {
       </div>
 
       {/* Text Input for User Messages */}
-      <input
-        type="text"
-        value={userMessage}
-        onChange={(e) => setUserMessage(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") sendMessage(userMessage);
-        }}
-        placeholder="Type your question..."
-        style={{ width: "80%", padding: "5px", marginTop: "10px" }}
-      />
-      <button
-        onClick={() => sendMessage(userMessage)}
-        style={{ padding: "5px 10px", marginLeft: "5px" }}
-      >
-        Send
-      </button>
+      <div style={{ display: "flex", padding: "0 10px 10px 10px" }}>
+        <input
+          type="text"
+          value={userMessage}
+          onChange={(e) => setUserMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") sendMessage(userMessage);
+          }}
+          placeholder="Type your question..."
+          style={{ 
+            width: "80%", 
+            padding: "10px", 
+            border: "1px solid #ddd",
+            borderRadius: "20px 0 0 20px",
+            outline: "none"
+          }}
+        />
+        <button
+          onClick={() => sendMessage(userMessage)}
+          style={{ 
+            padding: "10px 15px", 
+            backgroundColor: "#34495e", 
+            color: "#fff",
+            border: "none",
+            borderRadius: "0 20px 20px 0",
+            cursor: "pointer"
+          }}
+        >
+          Send
+        </button>
+      </div>
 
       {/* Quick Action Buttons */}
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={() => sendMessage("1")}>Plan a Trip</button>
-        <button onClick={() => sendMessage("2")}>Find a Hotel</button>
-        <button onClick={() => sendMessage("3")}>Get Directions</button>
-        <button onClick={() => sendMessage("4")}>Find Attractions</button>
+      <div style={{ 
+        marginTop: "5px", 
+        display: "flex", 
+        justifyContent: "space-between",
+        padding: "0 10px 15px 10px"
+      }}>
+        <button onClick={() => sendMessage("1")} style={{ 
+          padding: "8px 12px", 
+          backgroundColor: "#7CB9E8", 
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          flex: "1",
+          margin: "0 5px"
+        }}>Plan a Trip</button>
+        <button onClick={() => sendMessage("2")} style={{ 
+          padding: "8px 12px", 
+          backgroundColor: "#7CB9E8", 
+          color: "#fff", 
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          flex: "1",
+          margin: "0 5px"
+        }}>Find a Hotel</button>
+        <button onClick={() => sendMessage("3")} style={{ 
+          padding: "8px 12px", 
+          backgroundColor: "#7CB9E8", 
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          flex: "1",
+          margin: "0 5px"
+        }}>Get Directions</button>
+        <button onClick={() => sendMessage("4")} style={{ 
+          padding: "8px 12px", 
+          backgroundColor: "#7CB9E8", 
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          flex: "1",
+          margin: "0 5px"
+        }}>Find Attractions</button>
       </div>
     </div>
   );
+
 };
 
 export default TravelChatbot;
